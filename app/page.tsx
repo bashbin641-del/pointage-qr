@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 
 type ScannerState = 'ready' | 'checking' | 'error';
@@ -14,6 +15,7 @@ export default function Home() {
   return (
     <main className="borne-shell theme-borne">
       <section className="borne-card" aria-live="polite">
+        <Image className="brand-logo" src="/brand/inox-logo.png" alt="INOX Technologies" width={150} height={106} priority />
         <p className="eyebrow">INOX PRÉSENCE</p>
         <h1>Pointage</h1>
         <p className="lead">{message}</p>

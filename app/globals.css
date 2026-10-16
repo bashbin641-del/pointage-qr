@@ -5,6 +5,7 @@ body { margin: 0; font-family: var(--police-interface); background: var(--fond-a
 button { font: inherit; }
 .borne-shell { min-height: 100vh; display: grid; place-items: center; padding: var(--espace-6); background: var(--fond-application); }
 .borne-card { width: min(100%, 520px); text-align: center; padding: clamp(28px, 6vw, 56px); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); background: var(--surface); box-shadow: var(--ombre-carte); }
+.brand-logo { display: block; width: 150px; height: 106px; object-fit: contain; margin: 0 auto var(--espace-3); }
 .eyebrow { margin: 0 0 var(--espace-3); color: var(--inox-ciel); font-size: var(--taille-sm); font-weight: 700; letter-spacing: .12em; }
 h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); }
 .lead { margin: var(--espace-3) 0 var(--espace-8); color: var(--texte-secondaire); font-size: var(--taille-lg); line-height: 1.5; }
