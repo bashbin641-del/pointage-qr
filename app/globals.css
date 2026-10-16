@@ -1,0 +1,20 @@
+@import './tokens.css';
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { margin: 0; font-family: var(--police-interface); background: var(--fond-application); color: var(--texte-principal); }
+button { font: inherit; }
+.borne-shell { min-height: 100vh; display: grid; place-items: center; padding: var(--espace-6); background: var(--fond-application); }
+.borne-card { width: min(100%, 520px); text-align: center; padding: clamp(28px, 6vw, 56px); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); background: var(--surface); box-shadow: var(--ombre-carte); }
+.eyebrow { margin: 0 0 var(--espace-3); color: var(--inox-ciel); font-size: var(--taille-sm); font-weight: 700; letter-spacing: .12em; }
+h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); }
+.lead { margin: var(--espace-3) 0 var(--espace-8); color: var(--texte-secondaire); font-size: var(--taille-lg); line-height: 1.5; }
+.scan-frame { display: grid; place-items: center; height: 220px; margin: 0 auto var(--espace-8); border: 2px solid var(--inox-ciel); border-radius: var(--rayon-carte); background: rgb(69 183 237 / 8%); }
+.scan-frame span { width: min(62%, 170px); aspect-ratio: 1; border: 4px solid var(--text-on-dark); border-radius: 18px; box-shadow: 0 0 0 10px rgb(69 183 237 / 12%); }
+.scan-frame.checking { animation: pulse 1s ease-in-out infinite alternate; }
+.scan-frame.error { border-color: var(--erreur); background: rgb(185 28 28 / 8%); }
+.primary-button { min-height: 48px; width: 100%; border: 0; border-radius: var(--rayon-champ); background: var(--action-principale); color: white; font-weight: 700; cursor: pointer; }
+.primary-button:focus-visible { outline: 3px solid var(--inox-orange); outline-offset: 3px; }
+.primary-button:disabled { cursor: wait; opacity: .7; }
+.helper { margin: var(--espace-4) 0 0; color: var(--texte-secondaire); font-size: var(--taille-sm); }
+@keyframes pulse { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
