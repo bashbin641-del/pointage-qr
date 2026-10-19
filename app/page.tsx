@@ -11,7 +11,8 @@ const storageKey = "inox-presence-terminal-session-v1";
 function apiUrl(path: string) {
   const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   if (!base) throw new Error("API_URL_MISSING");
-  return `${base}/api/v1/${path}`;
+  const root = base.endsWith("/api/v1") ? base : `${base}/api/v1`;
+  return `${root}/${path}`;
 }
 
 function errorMessage(status: number, code?: string) {
