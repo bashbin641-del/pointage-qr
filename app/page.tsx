@@ -7,6 +7,46 @@ import type { IScannerControls } from "@zxing/browser";
 type Terminal = { id: string; name: string; site: { name: string; timezone: string } | null };
 type ScannerState = "ready" | "starting" | "scanning" | "checking" | "success" | "error";
 const storageKey = "inox-presence-terminal-session-v1";
+const cameraPermissionTimeoutMs = 10_000;
+const cameraStartupTimeoutMs = 5_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string) {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(code)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
+
+async function requestCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error("CAMERA_UNSUPPORTED");
+  let requestExpired = false;
+  const request = navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: "environment" } },
+  });
+  void request.then((stream) => {
+    if (requestExpired) stream.getTracks().forEach((track) => track.stop());
+  }).catch(() => undefined);
+  try {
+    return await withTimeout(request, cameraPermissionTimeoutMs, "CAMERA_PERMISSION_TIMEOUT");
+  } catch (error) {
+    requestExpired = true;
+    throw error;
+  }
+}
+
+function cameraErrorMessage(error: unknown) {
+  const detail = error as { name?: string; message?: string };
+  if (detail.name === "NotAllowedError" || detail.name === "SecurityError") return "Accès à la caméra refusé. Autorisez-le dans le navigateur puis réessayez.";
+  if (detail.name === "NotFoundError" || detail.name === "DevicesNotFoundError") return "Aucune caméra n’est disponible sur cet appareil.";
+  if (detail.message === "CAMERA_PERMISSION_TIMEOUT") return "La demande d’accès à la caméra n’a pas reçu de réponse. Vérifiez l’autorisation du navigateur puis réessayez.";
+  if (detail.message === "CAMERA_START_TIMEOUT") return "Le flux vidéo n’a pas pu démarrer. Vérifiez la caméra puis réessayez.";
+  if (detail.message === "CAMERA_UNSUPPORTED") return "Ce navigateur ne permet pas l’accès à la caméra.";
+  return "Caméra indisponible. Vérifiez son autorisation dans le navigateur puis réessayez.";
+}
 
 function apiUrl(path: string) {
   const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -84,9 +124,20 @@ export default function Home() {
       const { BrowserQRCodeReader } = await import("@zxing/browser");
       const reader = new BrowserQRCodeReader(undefined, { delayBetweenScanAttempts: 250 });
       if (!videoRef.current) throw new Error("VIDEO_MISSING");
-      const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => { if (result) void submitScan(result.getText()); });
+      const stream = await requestCamera();
+      let startupExpired = false;
+      const startup = reader.decodeFromStream(stream, videoRef.current, (result) => { if (result) void submitScan(result.getText()); });
+      void startup.then((lateControls) => { if (startupExpired) lateControls.stop(); }).catch(() => undefined);
+      let controls: IScannerControls;
+      try {
+        controls = await withTimeout(startup, cameraStartupTimeoutMs, "CAMERA_START_TIMEOUT");
+      } catch (error) {
+        startupExpired = true;
+        stream.getTracks().forEach((track) => track.stop());
+        throw error;
+      }
       controlsRef.current = controls; setState("scanning"); setMessage("Cadrez le QR dans la zone de lecture.");
-    } catch { stopCamera(); setState("error"); setMessage("Caméra indisponible. Autorisez son accès dans le navigateur puis réessayez."); }
+    } catch (error) { stopCamera(); setState("error"); setMessage(cameraErrorMessage(error)); }
   }
 
   if (checkingSession) return <main className="borne-shell theme-borne"><section className="borne-card"><p>Vérification du terminal…</p></section></main>;
