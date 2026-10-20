@@ -22,12 +22,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string) {
   });
 }
 
-async function requestCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error("CAMERA_UNSUPPORTED");
+async function openCamera(video: MediaTrackConstraints) {
   let requestExpired = false;
   const request = navigator.mediaDevices.getUserMedia({
     audio: false,
-    video: { facingMode: { ideal: "environment" } },
+    video,
   });
   void request.then((stream) => {
     if (requestExpired) stream.getTracks().forEach((track) => track.stop());
@@ -37,6 +36,18 @@ async function requestCamera() {
   } catch (error) {
     requestExpired = true;
     throw error;
+  }
+}
+
+async function requestCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error("CAMERA_UNSUPPORTED");
+  const resolution = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+  try {
+    return await openCamera({ ...resolution, facingMode: { exact: "environment" } });
+  } catch (error) {
+    const detail = error as { name?: string };
+    if (detail.name !== "OverconstrainedError" && detail.name !== "NotFoundError" && detail.name !== "DevicesNotFoundError") throw error;
+    return openCamera({ ...resolution, facingMode: { ideal: "environment" } });
   }
 }
 
@@ -193,5 +204,5 @@ export default function Home() {
 
   if (checkingSession) return <main className="borne-shell theme-borne"><CompactDataLoader label="Vérification du terminal…" /></main>;
   if (!terminal) return <main className="borne-shell theme-borne"><section className="borne-card"><Image className="brand-logo" src="/brand/inox-logo.png" alt="INOX Technologies" width={150} height={106} priority /><p className="eyebrow">INOX PRÉSENCE</p><h1>Activer cette borne</h1><p className="lead">Saisissez le code à 12 caractères généré depuis l’administration.</p><form className="activation-form" onSubmit={activate}><label>Code d’activation<input value={activationCode} onChange={(event) => setActivationCode(event.target.value.toUpperCase())} minLength={12} maxLength={12} required autoComplete="one-time-code" placeholder="A1B2C3D4E5F6" /></label>{message ? <p className={state === "error" ? "status-error" : "helper"} role={state === "error" ? "alert" : "status"}>{message}</p> : null}<button className="primary-button" disabled={activationPending || activationCode.trim().length !== 12}>{activationPending ? "Activation…" : "Activer le terminal"}</button></form></section></main>;
-  return <main className="borne-shell theme-borne"><section className="borne-card" aria-live="polite"><Image className="brand-logo" src="/brand/inox-logo.png" alt="INOX Technologies" width={150} height={106} priority /><p className="eyebrow">INOX PRÉSENCE</p><h1>Pointage</h1><p className="terminal-name">{terminal.name} · {terminal.site?.name}</p><p className="lead">{message}</p>{state === "checking" ? <CompactDataLoader label="Validation du pointage…" /> : null}{state === "confirming" ? <section className="attendance-confirmation" role="dialog" aria-modal="true" aria-labelledby="attendance-confirmation-title"><h2 id="attendance-confirmation-title">Quel pointage confirmer ?</h2><p>Demandez à l’employé de confirmer son mouvement réel. Le système ne choisit pas à sa place.</p><div className="attendance-choices"><button className="choice-button entry" type="button" onClick={() => void submitScan("entree")}>Entrée / montée</button><button className="choice-button exit" type="button" onClick={() => void submitScan("sortie")}>Sortie / descente</button></div><button className="quiet-button" type="button" onClick={cancelAttendanceConfirmation}>Annuler ce pointage</button></section> : <><div className={`scan-frame ${state}`}><video ref={videoRef} muted playsInline aria-label="Aperçu de la caméra" /><span aria-hidden="true" /></div><button className="primary-button" type="button" onClick={() => void startScan()} disabled={state === "starting" || state === "checking" || state === "scanning"}>{state === "scanning" ? "Scanner actif" : state === "checking" ? "Vérification…" : "Démarrer le scanner"}</button>{state === "scanning" ? <button className="quiet-button" type="button" onClick={() => { stopCamera(); setState("ready"); setMessage("Scanner arrêté. Aucun pointage n’a été envoyé."); }}>Arrêter la caméra</button> : null}</>}<p className="helper">Maximum : une entrée et une sortie par employé et par jour.</p></section></main>;
+  return <main className="borne-shell theme-borne"><section className="borne-card" aria-live="polite"><Image className="brand-logo" src="/brand/inox-logo.png" alt="INOX Technologies" width={150} height={106} priority /><p className="eyebrow">INOX PRÉSENCE</p><h1>Pointage</h1><p className="terminal-name">{terminal.name} · {terminal.site?.name}</p><p className="lead">{message}</p>{state === "checking" ? <CompactDataLoader label="Validation du pointage…" /> : null}{state === "confirming" ? <section className="attendance-confirmation" role="dialog" aria-modal="true" aria-labelledby="attendance-confirmation-title"><h2 id="attendance-confirmation-title">Quel pointage confirmer ?</h2><p>Demandez à l’employé de confirmer son mouvement réel. Le système ne choisit pas à sa place.</p><div className="attendance-choices"><button className="choice-button entry" type="button" onClick={() => void submitScan("entree")}>Entrée / montée</button><button className="choice-button exit" type="button" onClick={() => void submitScan("sortie")}>Sortie / descente</button></div><button className="quiet-button" type="button" onClick={cancelAttendanceConfirmation}>Annuler ce pointage</button></section> : <><div className={`scan-frame ${state}`}><video ref={videoRef} muted playsInline aria-label="Aperçu de la caméra sans effet miroir" /><span aria-hidden="true" /></div><button className="primary-button" type="button" onClick={() => void startScan()} disabled={state === "starting" || state === "checking" || state === "scanning"}>{state === "scanning" ? "Scanner actif" : state === "checking" ? "Vérification…" : "Démarrer le scanner"}</button>{state === "scanning" ? <button className="quiet-button" type="button" onClick={() => { stopCamera(); setState("ready"); setMessage("Scanner arrêté. Aucun pointage n’a été envoyé."); }}>Arrêter la caméra</button> : null}</>}<p className="helper">Caméra arrière prioritaire, aperçu sans effet miroir. Maximum : une entrée et une sortie par employé et par jour.</p></section></main>;
 }
