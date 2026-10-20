@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { IScannerControls } from "@zxing/browser";
+import { subscribeToCoreEvents } from "@/lib/realtime";
 
 type Terminal = { id: string; name: string; site: { name: string; timezone: string } | null };
 type ScannerState = "ready" | "starting" | "scanning" | "checking" | "success" | "error";
@@ -82,6 +83,15 @@ export default function Home() {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
+  const deactivateTerminal = useCallback((reason: string) => {
+    stopCamera();
+    window.localStorage.removeItem(storageKey);
+    setTerminal(null);
+    setSessionToken("");
+    setState("error");
+    setMessage(reason);
+  }, [stopCamera]);
+
   useEffect(() => () => stopCamera(), [stopCamera]);
 
   useEffect(() => {
@@ -92,6 +102,19 @@ export default function Home() {
       .catch(() => window.localStorage.removeItem(storageKey))
       .finally(() => setCheckingSession(false));
   }, []);
+
+  useEffect(() => {
+    if (!sessionToken) return;
+    return subscribeToCoreEvents("events/terminal", {
+      getAccessToken: async () => sessionToken,
+      onEvent: (event) => {
+        if (event.type === "terminal.session_revoked") {
+          deactivateTerminal("La session de cette borne a été remplacée. Saisissez le nouveau code d’activation.");
+        }
+      },
+      onUnauthorized: () => deactivateTerminal("La session de cette borne a expiré. Saisissez un nouveau code d’activation."),
+    });
+  }, [deactivateTerminal, sessionToken]);
 
   async function activate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setActivationPending(true); setMessage("");
