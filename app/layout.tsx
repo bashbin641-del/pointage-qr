@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import AppRuntimeGuard from "@/components/app-runtime-guard";
+import { chunkRecoveryScript } from "@/lib/chunk-recovery";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +12,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <head><script dangerouslySetInnerHTML={{ __html: chunkRecoveryScript }} /></head>
+      <body><AppRuntimeGuard />{children}</body>
     </html>
   );
 }
