@@ -20,7 +20,16 @@ h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); }
 .helper { margin: var(--espace-4) 0 0; color: var(--texte-secondaire); font-size: var(--taille-sm); }
 .compact-data-loader { display:inline-flex; align-items:center; gap:9px; width:max-content; max-width:100%; padding:9px 12px; border:1px solid var(--bordure); border-radius:999px; background:var(--surface); color:var(--texte-secondaire); box-shadow:0 4px 14px rgb(15 23 42 / 8%); font-size:var(--taille-sm); font-weight:700; }
 .compact-data-spinner { width:14px; height:14px; flex:0 0 auto; border:2px solid #64748b; border-top-color:var(--inox-ciel); border-radius:50%; animation:data-spin .65s linear infinite; }
+.attendance-confirmation { display:grid; gap:16px; margin:0 0 var(--espace-6); padding:20px; border:1px solid #3b82f6; border-radius:var(--rayon-carte); background:#172334; text-align:left; }
+.attendance-confirmation h2,.attendance-confirmation p { margin:0; }
+.attendance-confirmation p { color:#cbd5e1; line-height:1.5; }
+.attendance-choices { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.choice-button { min-height:58px; border:1px solid transparent; border-radius:var(--rayon-champ); color:#fff; font-weight:800; cursor:pointer; }
+.choice-button.entry { background:#15803d; }
+.choice-button.exit { background:#b45309; }
+.choice-button:focus-visible { outline:3px solid var(--inox-ciel); outline-offset:3px; }
 .terminal-name{margin:10px 0 0;color:var(--inox-ciel);font-weight:700}.quiet-button{min-height:46px;width:100%;margin-top:12px;border:1px solid var(--bordure);border-radius:var(--rayon-champ);background:transparent;color:var(--texte-principal);font-weight:700;cursor:pointer}.activation-form{display:grid;gap:18px;text-align:left}.activation-form label{display:grid;gap:8px;font-weight:700}.activation-form input{min-height:52px;padding:10px 14px;border:1px solid var(--bordure);border-radius:10px;background:#172334;color:#fff;text-transform:uppercase;letter-spacing:.12em}.status-error{margin:0;padding:12px;border-radius:10px;background:#7f1d1d;color:#fecaca}.scan-frame.success{border-color:var(--succes);background:rgb(21 128 61 / 10%)}.primary-button:disabled{cursor:not-allowed}
 @keyframes pulse { from { opacity: .65; } to { opacity: 1; } }
 @keyframes data-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 520px) { .attendance-choices { grid-template-columns:1fr; } }
